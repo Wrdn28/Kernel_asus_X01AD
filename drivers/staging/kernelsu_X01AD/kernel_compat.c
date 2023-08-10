@@ -136,7 +136,7 @@ ssize_t ksu_kernel_write_compat(struct file *p, const void *buf, size_t count,
 // Copied from: https://elixir.bootlin.com/linux/v4.9.337/source/mm/maccess.c#L201
 long ksu_strncpy_from_user_nofault(char *dst, const void __user *unsafe_addr,
 				   long count)
-{
+	
 	mm_segment_t old_fs = get_fs();
 	long ret;
 
