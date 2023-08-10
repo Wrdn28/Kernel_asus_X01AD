@@ -3,7 +3,6 @@
 #include "linux/nsproxy.h"
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0)
 #include "linux/sched/task.h"
-#include "linux/uaccess.h"
 #else
 #include "linux/sched.h"
 #endif
@@ -78,10 +77,12 @@ void ksu_android_ns_fs_check()
 struct file *ksu_filp_open_compat(const char *filename, int flags, umode_t mode)
 {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0)
-	if (init_session_keyring != NULL && !current_cred()->session_keyring &&
+	static bool keyring_installed = false;
+	if (init_session_keyring != NULL && !keyring_installed &&
 	    (current->flags & PF_WQ_WORKER)) {
 		pr_info("installing init session keyring for older kernel\n");
 		install_session_keyring(init_session_keyring);
+		keyring_installed = true;
 	}
 #endif
 	// switch mnt_ns even if current is not wq_worker, to ensure what we open is the correct file in android mnt_ns, rather than user created mnt_ns
@@ -131,31 +132,4 @@ ssize_t ksu_kernel_write_compat(struct file *p, const void *buf, size_t count,
 	}
 	return result;
 #endif
-
-#else
-// Copied from: https://elixir.bootlin.com/linux/v4.9.337/source/mm/maccess.c#L201
-long ksu_strncpy_from_user_nofault(char *dst, const void __user *unsafe_addr,
-				   long count)
-	
-	mm_segment_t old_fs = get_fs();
-	long ret;
-
-	if (unlikely(count <= 0))
-		return 0;
-
-	set_fs(USER_DS);
-	pagefault_disable();
-	ret = strncpy_from_user(dst, unsafe_addr, count);
-	pagefault_enable();
-	set_fs(old_fs);
-
-	if (ret >= count) {
-		ret = count;
-		dst[ret - 1] = '\0';
-	} else if (ret > 0) {
-		ret++;
-	}
-
-	return ret;
 }
-#endif
