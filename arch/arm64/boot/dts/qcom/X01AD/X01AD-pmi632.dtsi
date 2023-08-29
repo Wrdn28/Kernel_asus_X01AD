@@ -95,6 +95,7 @@
 			pmi632_switch1: qcom,led_switch_1 {
 				qcom,led-mask = <3>;
                                 qcom,default-led-trigger = "switch1_trigger";
+                         };
 		};
 	};
 };
