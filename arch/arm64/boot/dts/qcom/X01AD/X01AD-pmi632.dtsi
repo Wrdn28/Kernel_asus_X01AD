@@ -164,6 +164,9 @@
 	};
 };
 &soc {
+
+        /delete-node/ qcom,camera-flash;
+
 	led_flash0: qcom,camera-flash@0 {
 		cell-index = <0>;
 		compatible = "qcom,camera-flash";
